@@ -3,7 +3,8 @@ import { FiLogIn, FiMail, FiLock } from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
 import { Form } from '@unform/web';
 import * as Yup from 'yup';
-import { useAuth } from '../../hooks/AuthContext';
+import { useAuth } from '../../hooks/auth';
+import { useToast } from '../../hooks/toast';
 
 import getValidationErrors from '../../utils/getValidationErrors';
 
@@ -23,6 +24,7 @@ const SignIn: React.FC = () => {
   const formRef = useRef<FormHandles>(null);
 
   const { signIn } = useAuth();
+  const { addToast } = useToast();
 
   const handleSubmit = useCallback(
     async (data: SignInFormData) => {
@@ -40,7 +42,7 @@ const SignIn: React.FC = () => {
           abortEarly: false,
         });
 
-        signIn({
+        await signIn({
           email: data.email,
           password: data.password,
         });
@@ -50,9 +52,16 @@ const SignIn: React.FC = () => {
 
           formRef.current?.setErrors(errors);
         }
+
+        addToast({
+          type: 'error',
+          title: 'Erro na autenticação',
+          description:
+            'Ocorreu um erro ao fazer login, verifique as credenciais.',
+        });
       }
     },
-    [signIn],
+    [addToast, signIn],
   );
 
   return (
@@ -62,12 +71,19 @@ const SignIn: React.FC = () => {
 
         <Form ref={formRef} onSubmit={handleSubmit}>
           <h1>Faça o login</h1>
-          <Input name="email" icon={FiMail} placeholder="E-mail" />
+          <Input
+            name="email"
+            icon={FiMail}
+            type="email"
+            autoComplete="email"
+            placeholder="E-mail"
+          />
           <Input
             name="password"
             icon={FiLock}
             type="password"
-            placeholder="Password"
+            autoComplete="current-password"
+            placeholder="password"
           />
           <Button type="submit">Entrar</Button>
           <a href="forgot">Esqueci a minha senha</a>
